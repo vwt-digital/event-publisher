@@ -67,7 +67,7 @@ class Formatter:
                     'format_to', '%Y-%m-%dT%H:%M:%SZ')))
 
             if value.get('prefix_value'):
-                message[key] = f"{key['prefix_value']}{message[key]}"
+                message[key] = f"{value['prefix_value']}{message[key]}"
 
     def format(self, messages: list) -> list:
         """
@@ -84,7 +84,7 @@ class Formatter:
                 if isinstance(value, dict):
                     if (value.get('conversion') == 'geojson_point' and
                             message.get(value['longitude_attribute']) and
-                            message.get(value['latituted_attribute'])):
+                            message.get(value['latitude_attribute'])):
                         msg[key] = {
                             "type": "Point",
                             "coordinates": [float(message[value['longitude_attribute']]),
