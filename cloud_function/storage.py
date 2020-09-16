@@ -70,7 +70,8 @@ class File:
             data = self._xml_to_json(self.content)
         elif self._is_json():
             data = json.loads(self.content)
-            data = data.get(self.top_level_attribute, data)
+            if isinstance(data, dict):
+                data = data.get(self.top_level_attribute, data)
         else:
             raise NotImplementedError("Unknown file type!")
 
