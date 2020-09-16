@@ -44,30 +44,30 @@ class Formatter:
         """
 
         for key, value in self._template.items():
-            if value.get('conversion') == 'lowercase':
-                message[key] = message[key].lower()
-            elif value.get('conversion') == 'uppercase':
-                message[key] = message[key].lower()
-            elif value.get('conversion') == 'capitalize':
-                message[key] = message[key].capitalize()
-            elif value.get('conversion') == 'numeric':
-                value = message[key]
-                if self._is_int(value):
-                    message[key] = int(float(value))
-                elif self._is_float(value):
-                    message[key] = float(value)
-            elif value.get('conversion') == 'datetime':
-                if isinstance(message[key], int):
-                    # the datetime was converted by Pandas to Unix epoch in milliseconds
-                    date_object = datetime.fromtimestamp(int(message[key] / 1000), timezone.utc)
-                else:
-                    date_object = datetime.strptime(message[key], value.get(
-                        'format_from', '%Y-%m-%dT%H:%M:%SZ'))
-                message[key] = str(datetime.strftime(date_object, value.get(
-                    'format_to', '%Y-%m-%dT%H:%M:%SZ')))
+            if message.get(key):
+                if value.get('conversion') == 'lowercase':
+                    message[key] = message[key].lower()
+                elif value.get('conversion') == 'uppercase':
+                    message[key] = message[key].lower()
+                elif value.get('conversion') == 'capitalize':
+                    message[key] = message[key].capitalize()
+                elif value.get('conversion') == 'numeric':
+                    if self._is_int(message[key]):
+                        message[key] = int(float(message[key]))
+                    elif self._is_float(message[key]):
+                        message[key] = float(message[key])
+                elif value.get('conversion') == 'datetime':
+                    if isinstance(message[key], int):
+                        # the datetime was converted by Pandas to Unix epoch in milliseconds
+                        date_object = datetime.fromtimestamp(int(message[key] / 1000), timezone.utc)
+                    else:
+                        date_object = datetime.strptime(message[key], value.get(
+                            'format_from', '%Y-%m-%dT%H:%M:%SZ'))
+                    message[key] = str(datetime.strftime(date_object, value.get(
+                        'format_to', '%Y-%m-%dT%H:%M:%SZ')))
 
-            if value.get('prefix_value'):
-                message[key] = f"{value['prefix_value']}{message[key]}"
+                if value.get('prefix_value'):
+                    message[key] = f"{value['prefix_value']}{message[key]}"
 
     def format(self, messages: list) -> list:
         """
