@@ -31,8 +31,8 @@ class Publisher:
         :param batch_size:  Indicates whether messages should be send as a list or stand alone.
         """
 
-        batches = self._chunks(messages, batch_size)
-        print(f"Sending messages in {len(list(batches))} batches with batch_size {batch_size}")
+        batches = list(self._chunks(messages, batch_size))
+        print(f"Sending messages in {len(batches)} batches with batch_size {batch_size}")
 
         topic_path = self._client.topic_path(project_id, topic_id)
         for idx, batch in enumerate(batches):
@@ -50,8 +50,6 @@ class Publisher:
                     'Published messages with ID {} ({}/{} batches).'.format(
                         future.result(), idx, len(batches)))
             )
-
-            future.result()
 
     def _chunks(self, lst: list, n: int):
         """
