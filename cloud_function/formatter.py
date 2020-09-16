@@ -44,19 +44,19 @@ class Formatter:
         """
 
         for key, value in self._template.items():
-            if key.get('conversion') == 'lowercase':
+            if value.get('conversion') == 'lowercase':
                 message[key] = message[key].lower()
-            elif key.get('conversion') == 'uppercase':
+            elif value.get('conversion') == 'uppercase':
                 message[key] = message[key].lower()
-            elif key.get('conversion') == 'capitalize':
+            elif value.get('conversion') == 'capitalize':
                 message[key] = message[key].capitalize()
-            elif key.get('conversion') == 'numeric':
+            elif value.get('conversion') == 'numeric':
                 value = message[key]
                 if self._is_int(value):
                     message[key] = int(float(value))
                 elif self._is_float(value):
                     message[key] = float(value)
-            elif key.get('conversion') == 'datetime':
+            elif value.get('conversion') == 'datetime':
                 if isinstance(message[key], int):
                     # the datetime was converted by Pandas to Unix epoch in milliseconds
                     date_object = datetime.fromtimestamp(int(message[key] / 1000), timezone.utc)
@@ -66,7 +66,7 @@ class Formatter:
                 message[key] = str(datetime.strftime(date_object, value.get(
                     'format_to', '%Y-%m-%dT%H:%M:%SZ')))
 
-            if key.get('prefix_value'):
+            if value.get('prefix_value'):
                 message[key] = f"{key['prefix_value']}{message[key]}"
 
     def format(self, messages: list) -> list:
@@ -81,21 +81,21 @@ class Formatter:
             msg = {}
             for key, value in self._template.items():
                 msg[key] = None
-                if isinstance(key, dict):
-                    if (key.get('conversion') == 'geojson_point' and
-                            message.get(key['longitude_attribute']) and
-                            message.get(key['latituted_attribute'])):
-                        msg['key'] = {
+                if isinstance(value, dict):
+                    if (value.get('conversion') == 'geojson_point' and
+                            message.get(value['longitude_attribute']) and
+                            message.get(value['latituted_attribute'])):
+                        msg[key] = {
                             "type": "Point",
-                            "coordinates": [float(message[key['longitude_attribute']]),
-                                            float(message[key['latitude_attribute']])]
+                            "coordinates": [float(message[value['longitude_attribute']]),
+                                            float(message[value['latitude_attribute']])]
                         }
-                    for item in key.get('source_attribute', []):
-                        for attribute in key.get('source_attribute', []):
+                    for item in value.get('source_attribute', []):
+                        for attribute in value.get('source_attribute', []):
                             if message.get(attribute):
                                 msg[key] = message.get(attribute)
                     else:
-                        msg[key] = msg.get(key['source_attribute'], None)
+                        msg[key] = msg.get(value['source_attribute'])
                     if msg.get(key):
                         self._convert(msg)
                 else:
