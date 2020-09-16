@@ -96,7 +96,7 @@ class Formatter:
                                 if message.get(attribute):
                                     msg[key] = message.get(attribute)
                         else:
-                            msg[key] = msg.get(value['source_attribute'])
+                            msg[key] = message.get(value['source_attribute'])
                     if msg.get(key):
                         self._convert(msg)
                 else:
