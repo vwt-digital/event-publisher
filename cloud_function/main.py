@@ -45,9 +45,7 @@ def handler(data, context):
             raise NotImplementedError("Unkown state type!")
 
     # Exit when no new records exist
-    if len(records):
-        logging.info(f"Publishing {len(records)} new records!")
-    else:
+    if not len(records):
         logging.info("No new records found, exiting...")
         return
 
