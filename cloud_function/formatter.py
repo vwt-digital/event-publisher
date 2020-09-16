@@ -44,7 +44,7 @@ class Formatter:
         """
 
         for key, value in self._template.items():
-            if message.get(key):
+            if message.get(key) and isinstance(value, dict):
                 if value.get('conversion') == 'lowercase':
                     message[key] = message[key].lower()
                 elif value.get('conversion') == 'uppercase':
