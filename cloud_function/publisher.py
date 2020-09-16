@@ -34,8 +34,8 @@ class Publisher:
         topic_path = self._client.topic_path(project_id, topic_id)
         logging.info(f"Publishing {len(messages)} new records to {topic_path}")
 
-        batches = self._chunks(messages, batch_size)
-        logging.info(f"Sending messages in {len(list(batches))} batches with batch_size {batch_size}")
+        batches = list(self._chunks(messages, batch_size))
+        logging.info(f"Sending messages in {len(batches)} batches with batch_size {batch_size}")
 
         for idx, batch in enumerate(batches):
 
@@ -50,7 +50,7 @@ class Publisher:
             future.add_done_callback(
                 lambda x: logging.info(
                     'Published messages with ID {} ({}/{} batches).'.format(
-                        future.result(), idx, len(list(batches))))
+                        future.result(), idx, len(batches)))
             )
 
     def _chunks(self, lst: list, n: int):
