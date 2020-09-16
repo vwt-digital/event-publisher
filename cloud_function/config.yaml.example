@@ -1,0 +1,41 @@
+---
+topic:
+  id: my-topic-id
+  project_id: my-project-id
+  subject: message-subject
+  batch_size: 100
+  batch_settings:
+    max_messages: 300
+
+csv_dialect_parameters:
+  sep: ','
+  quotechar: '"'
+
+state:
+  type: datastore
+  kind: DatastoreKind
+  property: DatastoreProperty
+
+full_load: false
+top_level_attribute: rows
+prefix_filter: source/directory
+
+format:
+  Column1: first_name
+  Column2:
+    source_attribute: last_name
+    conversion: lowercase
+  Column3:
+    source_attribute:
+      - street_name
+      - street_number
+    conversion: uppercase
+  Column4:
+      source_attribute: date_of_birth
+      conversion: datetime
+      format_from: '%Y-%m-%dT%H:%M:%SZ'
+      format_to: '%Y-%m-%dT%H:%M:%SZ'
+  attribute_geometry:
+    conversion: geojson_point
+    longitude_attribute: longitude
+    latitude_attribute: latitude
