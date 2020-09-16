@@ -1,3 +1,4 @@
+from dateutil.parser import parse
 from datetime import datetime, timezone
 
 
@@ -61,8 +62,7 @@ class Formatter:
                         # the datetime was converted by Pandas to Unix epoch in milliseconds
                         date_object = datetime.fromtimestamp(int(message[key] / 1000), timezone.utc)
                     else:
-                        date_object = datetime.strptime(message[key], value.get(
-                            'format_from', '%Y-%m-%dT%H:%M:%SZ'))
+                        date_object = parse(message[key])
                     message[key] = str(datetime.strftime(date_object, value.get(
                         'format_to', '%Y-%m-%dT%H:%M:%SZ')))
 
