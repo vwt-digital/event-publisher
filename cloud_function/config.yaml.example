@@ -21,21 +21,18 @@ top_level_attribute: rows
 prefix_filter: source/directory
 
 format:
-  Column1: first_name
+  Column1:
+    name: first_name
   Column2:
-    source_attribute: last_name
-    conversion: lowercase
+    name: last_name
+    conversion:
+      type: lowercase
   Column3:
-    source_attribute:
-      - street_name
-      - street_number
-    conversion: uppercase
+      name: date_of_birth
+      conversion:
+        type: datetime
+        format: '%Y-%m-%dT%H:%M:%SZ'
   Column4:
-      source_attribute: date_of_birth
-      conversion: datetime
-      format_from: '%Y-%m-%dT%H:%M:%SZ'
-      format_to: '%Y-%m-%dT%H:%M:%SZ'
-  attribute_geometry:
-    conversion: geojson_point
-    longitude_attribute: longitude
-    latitude_attribute: latitude
+    name: geometry
+    conversion:
+      type: geojson_point

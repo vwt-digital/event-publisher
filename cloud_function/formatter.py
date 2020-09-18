@@ -1,5 +1,5 @@
+from datetime import datetime
 from dateutil.parser import parse
-from datetime import datetime, timezone
 
 
 class Formatter:
@@ -15,6 +15,8 @@ class Formatter:
     def _is_float(self, x) -> bool:
         """
         Returns true if parameter is a float.
+
+        :param x: Integer or float to validate.
         """
 
         try:
@@ -27,6 +29,8 @@ class Formatter:
     def _is_int(self, x) -> bool:
         """
         Returns true if parameter is an integer.
+
+        :param x: Integer or float to validate.
         """
 
         try:
@@ -37,37 +41,67 @@ class Formatter:
         else:
             return a == b
 
-    def _convert(self, message: dict):
+    def _to_numeric(self, value):
+        """
+        Converts a numeric variable to an int or float.
+
+        :param value: Value to convert to int or float.
+        """
+
+        if self._is_int(value):
+            return int(float(value))
+        elif self._is_float(value):
+            return float(value)
+
+    def _to_timestamp(self, value: str, format: str = '%Y-%m-%dT%H:%M:%SZ') -> str:
+        """
+        Converts a timestamp to uniform string format.
+
+        :param value: Value to convert to string timestamp.
+        """
+
+        date_object = parse(value)
+        date_string = str(datetime.strftime(date_object, format))
+
+        return date_string
+
+    def _to_geojson(self, value: dict) -> dict:
+        """
+        Converts a longitude and latitude to geojson.
+
+        :param value: Dictionary to convert to geojson point.
+        """
+
+        geojson = {
+            "type": "Point",
+            "coordinates": [float(value['longitude_attribute']),
+                            float(value['latitude_attribute'])]
+        }
+
+        return geojson
+
+    def _convert(self, value, type: str, format: str = None):
         """
         Converts fields of a message.
 
-        :param message: A message with key and values.
+        :param  value: The value to format.
+        :param   type: Formatting type to lookup.
+        :param format: Optional formatting format.
+
         """
 
-        for key, value in self._template.items():
-            if message.get(key) and isinstance(value, dict):
-                if value.get('conversion') == 'lowercase':
-                    message[key] = message[key].lower()
-                elif value.get('conversion') == 'uppercase':
-                    message[key] = message[key].lower()
-                elif value.get('conversion') == 'capitalize':
-                    message[key] = message[key].capitalize()
-                elif value.get('conversion') == 'numeric':
-                    if self._is_int(message[key]):
-                        message[key] = int(float(message[key]))
-                    elif self._is_float(message[key]):
-                        message[key] = float(message[key])
-                elif value.get('conversion') == 'datetime':
-                    if isinstance(message[key], int):
-                        # the datetime was converted by Pandas to Unix epoch in milliseconds
-                        date_object = datetime.fromtimestamp(int(message[key] / 1000), timezone.utc)
-                    else:
-                        date_object = parse(message[key])
-                    message[key] = str(datetime.strftime(date_object, value.get(
-                        'format_to', '%Y-%m-%dT%H:%M:%SZ')))
+        result = {
+          'lowercase': lambda x: x.lower(),
+          'uppercase': lambda x: x.upper(),
+          'capitalize': lambda x: x.capitalize(),
+          'numeric': lambda x: self._to_numeric(x),
+          'datetime': lambda x: self._to_timestamp(x, format),
+          'prefix_value': lambda x: f"{format}{x}",
+          'geojson_point': lambda x: self._to_geojson(x),
+          'no_conversion': lambda x: x
+        }[type](value)
 
-                if value.get('prefix_value'):
-                    message[key] = f"{value['prefix_value']}{message[key]}"
+        return result
 
     def format(self, messages: list) -> list:
         """
@@ -79,26 +113,13 @@ class Formatter:
         formatted = []
         for message in messages:
             msg = {}
-            for key, value in self._template.items():
-                msg[key] = None
-                if isinstance(value, dict):
-                    if (value.get('conversion') == 'geojson_point' and
-                            message.get(value['longitude_attribute']) and
-                            message.get(value['latitude_attribute'])):
-                        msg[key] = {
-                            "type": "Point",
-                            "coordinates": [float(message[value['longitude_attribute']]),
-                                            float(message[value['latitude_attribute']])]
-                        }
-                    elif value.get('source_attribute'):
-                        for item in value.get('source_attribute', []):
-                            for attribute in value.get('source_attribute', []):
-                                if message.get(attribute):
-                                    msg[key] = message.get(attribute)
-                        else:
-                            msg[key] = message.get(value['source_attribute'])
-                else:
-                    msg[key] = message.get(value)
-            self._convert(msg)
+            for key, value in message.items():
+                mapping = self._template.get(key)
+                if mapping:
+                    conversion = mapping.get('conversion', {})
+                    msg[mapping['name']] = self._convert(
+                        value,
+                        conversion.get('type', 'no_conversion'),
+                        conversion.get('format'))
             formatted.append(msg)
         return formatted
