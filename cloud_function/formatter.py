@@ -65,17 +65,29 @@ class Formatter:
 
         return date_string
 
-    def _to_geojson(self, value: dict) -> dict:
+    def _geojson(self, message: dict) -> dict:
         """
         Converts a longitude and latitude to geojson.
 
-        :param value: Dictionary to convert to geojson point.
+        :param message: Message to extract geojson from.
         """
+
+        longitude = None
+        latitude = None
+
+        for key, value in message.items():
+            mapping = self._template.get(key, {})
+            conversion = mapping.get('conversion', {})
+            if conversion.get('type') == 'geojson':
+                if conversion.get('format') == 'longitude':
+                    longitude = value
+                elif conversion.get('format') == 'latitude':
+                    latitude = value
 
         geojson = {
             "type": "Point",
-            "coordinates": [float(value['longitude_attribute']),
-                            float(value['latitude_attribute'])]
+            "coordinates": [float(longitude),
+                            float(latitude)]
         }
 
         return geojson
@@ -97,7 +109,6 @@ class Formatter:
           'numeric': lambda x: self._to_numeric(x),
           'datetime': lambda x: self._to_timestamp(x, format),
           'prefix_value': lambda x: f"{format}{x}",
-          'geojson_point': lambda x: self._to_geojson(x),
           'no_conversion': lambda x: x
         }[type](value)
 
@@ -117,9 +128,12 @@ class Formatter:
                 mapping = self._template.get(key)
                 if mapping:
                     conversion = mapping.get('conversion', {})
-                    msg[mapping['name']] = self._convert(
-                        value,
-                        conversion.get('type', 'no_conversion'),
-                        conversion.get('format'))
+                    if conversion.get('type') == 'geojson':
+                        msg[mapping['name']] = self._geojson(message)
+                    else:
+                        msg[mapping['name']] = self._convert(
+                            value,
+                            conversion.get('type', 'no_conversion'),
+                            conversion.get('format'))
             formatted.append(msg)
         return formatted
