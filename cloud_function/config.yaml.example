@@ -1,0 +1,38 @@
+---
+topic:
+  id: my-topic-id
+  project_id: my-project-id
+  subject: message-subject
+  batch_size: 100
+  batch_settings:
+    max_messages: 300
+
+csv_dialect_parameters:
+  sep: ','
+  quotechar: '"'
+
+state:
+  type: datastore
+  kind: DatastoreKind
+  property: DatastoreProperty
+
+full_load: false
+top_level_attribute: rows
+prefix_filter: source/directory
+
+format:
+  Column1:
+    name: first_name
+  Column2:
+    name: last_name
+    conversion:
+      type: lowercase
+  Column3:
+      name: date_of_birth
+      conversion:
+        type: datetime
+        format: '%Y-%m-%dT%H:%M:%SZ'
+  Column4:
+    name: geometry
+    conversion:
+      type: geojson_point
