@@ -3,6 +3,7 @@ import brotli
 import pandas as pd
 
 from io import BytesIO
+from retry import retry
 from google.cloud import storage
 from defusedxml import ElementTree as ET
 
@@ -112,6 +113,7 @@ class GoogleCloudStorage:
     def __init__(self):
         self._client = storage.Client()
 
+    @retry(ConnectionError, tries=3, delay=2, backoff=2, logger=None)
     def read(self, file_name: str, bucket_name: str):
         """
         Reads a file from Google Cloud Storage.
