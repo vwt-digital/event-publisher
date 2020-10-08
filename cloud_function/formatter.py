@@ -61,6 +61,8 @@ class Formatter:
         """
 
         if isinstance(value, int):
+            if len(str(value)) == 13:
+                value = value / 1000
             date_object = datetime.fromtimestamp(value)
         else:
             date_object = parse(value)
