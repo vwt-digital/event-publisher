@@ -60,8 +60,8 @@ class Formatter:
         :param value: Value to convert to string timestamp.
         """
 
-        if isinstance(value, int):
-            if len(str(value)) == 13:
+        if self._is_int(value) or self._is_float(value):
+            if len(str(int(value))) == 13:
                 value = value / 1000
             date_object = datetime.fromtimestamp(value)
         else:
