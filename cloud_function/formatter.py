@@ -53,14 +53,18 @@ class Formatter:
         elif self._is_float(value):
             return float(value)
 
-    def _to_timestamp(self, value: str, format: str = '%Y-%m-%dT%H:%M:%SZ') -> str:
+    def _to_timestamp(self, value, format='%Y-%m-%dT%H:%M:%SZ') -> str:
         """
         Converts a timestamp to uniform string format.
 
         :param value: Value to convert to string timestamp.
         """
 
-        date_object = parse(value)
+        if isinstance(value, int):
+            date_object = datetime.fromtimestamp(value)
+        else:
+            date_object = parse(value)
+
         date_string = str(datetime.strftime(date_object, format))
 
         return date_string
