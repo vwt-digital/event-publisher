@@ -1,5 +1,6 @@
 from datetime import datetime
 from dateutil.parser import parse
+from hashlib import sha256
 
 
 class Formatter:
@@ -118,6 +119,7 @@ class Formatter:
           'numeric': lambda x: self._to_numeric(x),
           'datetime': lambda x: self._to_timestamp(x, format),
           'prefix_value': lambda x: f"{format}{x}",
+          'hash': lambda x: sha256(x.encode('utf-8')).hexdigest(),
           'no_conversion': lambda x: x
         }[type](value)
 
