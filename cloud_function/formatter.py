@@ -87,12 +87,14 @@ class Formatter:
 
         for key, value in message.items():
             mapping = self._template.get(key, {})
-            conversion = mapping.get('conversion', {})
-            if conversion.get('type') == 'geojson':
-                if conversion.get('format') == 'longitude':
-                    longitude = value
-                elif conversion.get('format') == 'latitude':
-                    latitude = value
+
+            for map in get_mapping_list(mapping):
+                conversion = map.get('conversion', {})
+                if conversion.get('type') == 'geojson':
+                    if conversion.get('format') == 'longitude':
+                        longitude = value
+                    elif conversion.get('format') == 'latitude':
+                        latitude = value
 
         geojson = {
             "type": "Point",
@@ -138,13 +140,33 @@ class Formatter:
             for key, value in message.items():
                 mapping = self._template.get(key)
                 if mapping:
-                    conversion = mapping.get('conversion', {})
-                    if conversion.get('type') == 'geojson':
-                        msg[mapping['name']] = self._geojson(message)
-                    else:
-                        msg[mapping['name']] = self._convert(
-                            value,
-                            conversion.get('type', 'no_conversion'),
-                            conversion.get('format'))
+                    for map in get_mapping_list(mapping):
+                        conversion = map.get('conversion', {})
+                        if conversion.get('type') == 'geojson':
+                            msg[map['name']] = self._geojson(message)
+                        else:
+                            msg[map['name']] = self._convert(
+                                value,
+                                conversion.get('type', 'no_conversion'),
+                                conversion.get('format'))
             formatted.append(msg)
         return formatted
+
+
+def get_mapping_list(mapping):
+    """
+    Returns the mappings in list format
+
+    :param mapping: A mapping.
+    :type: dict | list
+
+    :return: A list of mappings.
+    :rtype: list
+    """
+
+    if isinstance(mapping, list):
+        return [item for item in mapping]
+    elif isinstance(mapping, dict):
+        return [mapping]
+    else:
+        return None
