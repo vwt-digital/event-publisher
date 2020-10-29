@@ -60,9 +60,10 @@ def handler(data, context):
         config.topic.subject)
 
     # Store the new state records
-    if config.state.type == "datastore":
-        logging.info("Adding new items to state")
-        GoogleCloudDatastore().put_multi(
-            records,
-            config.state.kind,
-            config.state.property)
+    if not config.full_load:
+        if config.state.type == "datastore":
+            logging.info("Adding new items to state")
+            GoogleCloudDatastore().put_multi(
+                records,
+                config.state.kind,
+                config.state.property)
