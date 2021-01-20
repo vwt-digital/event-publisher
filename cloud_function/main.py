@@ -49,21 +49,24 @@ def handler(data, context):
         logging.info("No new records found, exiting...")
         return
 
-    metadata = Gobits.from_context(context=context)
-    publisher = Publisher(config.topic.batch_settings)
-    publisher.publish(
-        config.topic.project_id,
-        config.topic.id,
-        records,
-        metadata.to_json(),
-        config.topic.batch_size,
-        config.topic.subject)
+    try:
+        metadata = Gobits.from_context(context=context)
+        publisher = Publisher(config.topic.batch_settings)
+        publisher.publish(
+            config.topic.project_id,
+            config.topic.id,
+            records,
+            metadata.to_json(),
+            config.topic.batch_size,
+            config.topic.subject)
 
-    # Store the new state records
-    if not config.full_load:
-        if config.state.type == "datastore":
-            logging.info("Adding new items to state")
-            GoogleCloudDatastore().put_multi(
-                records,
-                config.state.kind,
-                config.state.property)
+        # Store the new state records
+        if not config.full_load:
+            if config.state.type == "datastore":
+                logging.info("Adding new items to state")
+                GoogleCloudDatastore().put_multi(
+                    records,
+                    config.state.kind,
+                    config.state.property)
+    except Exception as e:
+        logging.exception(e)
