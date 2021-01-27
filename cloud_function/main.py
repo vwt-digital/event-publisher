@@ -18,38 +18,38 @@ def handler(data, context):
     :param: context Google Cloud Function context.
     """
 
-    bucket_name = data["bucket"]
-    file_name = data["name"]
-
-    config = Configuration()
-
-    # Exit when file does not need to be processed
-    if not file_name.startswith(config.prefix_filter):
-        logging.info("Do not process file, exiting...")
-        return
-
-    file = GoogleCloudStorage().read(file_name, bucket_name)
-    file.top_level_attribute = config.top_level_attribute
-    file.csv_dialect_parameters = config.csv_dialect_parameters
-
-    formatter = Formatter(config.template)
-    records = file.to_json(formatter)
-
-    if not config.full_load:
-        if config.state.type == "datastore":
-            records = GoogleCloudDatastore().difference(
-                records,
-                config.state.kind,
-                config.state.property)
-        else:
-            raise NotImplementedError("Unkown state type!")
-
-    # Exit when no new records exist
-    if not len(records):
-        logging.info("No new records found, exiting...")
-        return
-
     try:
+        bucket_name = data["bucket"]
+        file_name = data["name"]
+
+        config = Configuration()
+
+        # Exit when file does not need to be processed
+        if not file_name.startswith(config.prefix_filter):
+            logging.info("Do not process file, exiting...")
+            return
+
+        file = GoogleCloudStorage().read(file_name, bucket_name)
+        file.top_level_attribute = config.top_level_attribute
+        file.csv_dialect_parameters = config.csv_dialect_parameters
+
+        formatter = Formatter(config.template)
+        records = file.to_json(formatter)
+
+        if not config.full_load:
+            if config.state.type == "datastore":
+                records = GoogleCloudDatastore().difference(
+                    records,
+                    config.state.kind,
+                    config.state.property)
+            else:
+                raise NotImplementedError("Unkown state type!")
+
+        # Exit when no new records exist
+        if not len(records):
+            logging.info("No new records found, exiting...")
+            return
+
         metadata = Gobits.from_context(context=context)
         publisher = Publisher(config.topic.batch_settings)
         publisher.publish(
