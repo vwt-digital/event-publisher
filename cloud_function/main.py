@@ -70,3 +70,6 @@ def handler(data, context):
                     config.state.property)
     except Exception as e:
         logging.exception(e)
+        return 'Bad Request', 400
+
+    return 'OK', 204
