@@ -27,7 +27,7 @@ def handler(data, context):
         # Exit when file does not need to be processed
         if not file_name.startswith(config.prefix_filter):
             logging.info("Do not process file, exiting...")
-            return
+            return 'OK', 204
 
         file = GoogleCloudStorage().read(file_name, bucket_name)
         file.top_level_attribute = config.top_level_attribute
@@ -48,7 +48,7 @@ def handler(data, context):
         # Exit when no new records exist
         if not len(records):
             logging.info("No new records found, exiting...")
-            return
+            return 'OK', 204
 
         metadata = Gobits.from_context(context=context)
         publisher = Publisher(config.topic.batch_settings)
@@ -68,6 +68,7 @@ def handler(data, context):
                     records,
                     config.state.kind,
                     config.state.property)
+
     except Exception as e:
         logging.exception(e)
         return 'Bad Request', 400
