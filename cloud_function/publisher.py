@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 
 from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1 import types
@@ -37,6 +38,18 @@ class Publisher:
         batches = list(self._chunks(messages, batch_size))
         logging.info(f"Sending messages in {len(batches)} batches with batch_size {batch_size}")
 
+        futures = dict()
+
+        def get_callback(f, data):
+            def callback(f):
+                try:
+                    futures.pop(data)
+                except:  # noqa
+                    print("Please handle {} for {}.".format(f.exception(), data))
+                    raise
+
+            return callback
+
         for idx, batch in enumerate(batches):
 
             msg = {
@@ -44,14 +57,15 @@ class Publisher:
                 subject: batch
             }
 
-            future = self._client.publish(
-                topic_path, json.dumps(msg).encode('utf-8'))
+            futures.update({idx: None})
 
-            future.add_done_callback(
-                lambda x: logging.info(
-                    'Published messages with ID {} ({}/{} batches).'.format(
-                        future.result(), idx, len(batches)))
-            )
+            future = self._client.publish(topic_path, json.dumps(msg).encode('utf-8'))
+
+            futures[idx] = future
+            future.add_done_callback(get_callback(future, idx))
+
+        while futures:
+            time.sleep(0.1)
 
     def _chunks(self, lst: list, n: int):
         """
