@@ -8,6 +8,8 @@ from configuration import Configuration
 from datastore import GoogleCloudDatastore
 from storage import GoogleCloudStorage
 
+config = Configuration()
+
 
 def handler(data, context):
     """
@@ -22,8 +24,6 @@ def handler(data, context):
         bucket_name = data["bucket"]
         file_name = data["name"]
 
-        config = Configuration()
-
         # Exit when file does not need to be processed
         if not file_name.startswith(config.prefix_filter):
             logging.info("Do not process file, exiting...")
@@ -33,8 +33,7 @@ def handler(data, context):
         file.top_level_attribute = config.top_level_attribute
         file.csv_dialect_parameters = config.csv_dialect_parameters
 
-        formatter = Formatter(config.template)
-        records = file.to_json(formatter)
+        records = file.to_json(Formatter(config.template))
 
         if not config.full_load:
             if config.state.type == "datastore":
