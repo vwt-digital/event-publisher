@@ -5,11 +5,11 @@ cffi==1.14.4
 chardet==4.0.0
 decorator==4.4.2
 defusedxml==0.6.0
-gobits==1.0.6
+gobits==0.0.7
 google-api-core==1.26.0
 google-auth==1.25.0
 google-cloud-core==1.6.0
-google-cloud-datastore==1.15.3
+google-cloud-datastore==2.1.0
 google-cloud-pubsub==2.3.0
 google-cloud-storage==1.35.1
 google-crc32c==1.1.2
