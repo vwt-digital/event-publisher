@@ -8,6 +8,8 @@ from configuration import Configuration
 from datastore import GoogleCloudDatastore
 from storage import GoogleCloudStorage
 
+config = Configuration()
+
 
 def handler(data, context):
     """
@@ -22,19 +24,16 @@ def handler(data, context):
         bucket_name = data["bucket"]
         file_name = data["name"]
 
-        config = Configuration()
-
         # Exit when file does not need to be processed
         if not file_name.startswith(config.prefix_filter):
             logging.info("Do not process file, exiting...")
-            return
+            return 'OK', 204
 
         file = GoogleCloudStorage().read(file_name, bucket_name)
         file.top_level_attribute = config.top_level_attribute
         file.csv_dialect_parameters = config.csv_dialect_parameters
 
-        formatter = Formatter(config.template)
-        records = file.to_json(formatter)
+        records = file.to_json(Formatter(config.template))
 
         if not config.full_load:
             if config.state.type == "datastore":
@@ -48,7 +47,7 @@ def handler(data, context):
         # Exit when no new records exist
         if not len(records):
             logging.info("No new records found, exiting...")
-            return
+            return 'OK', 204
 
         metadata = Gobits.from_context(context=context)
         publisher = Publisher(config.topic.batch_settings)
@@ -68,5 +67,9 @@ def handler(data, context):
                     records,
                     config.state.kind,
                     config.state.property)
+
     except Exception as e:
         logging.exception(e)
+        return 'Bad Request', 400
+
+    return 'OK', 204
