@@ -26,7 +26,8 @@ class GoogleCloudDatastore:
                     key=self._client.key(kind, item[property]))
                 entity.update(item)
                 entities.append(entity)
-            self._client.put_multi(entities)
+            with self._client.transaction():
+                self._client.put_multi(entities)
 
     def _chunks(self, lst: list, n: int):
         """
