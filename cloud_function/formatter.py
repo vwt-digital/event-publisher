@@ -1,6 +1,8 @@
+import logging
 from datetime import datetime
-from dateutil.parser import parse
 from hashlib import sha256
+
+from dateutil import parser
 
 
 class Formatter:
@@ -62,14 +64,14 @@ class Formatter:
         """
 
         if not format:
-            format = '%Y-%m-%dT%H:%M:%SZ'
+            format = "%Y-%m-%dT%H:%M:%SZ"
 
         if self._is_int(value) or self._is_float(value):
             if len(str(int(value))) == 13:
                 value = value / 1000
             date_object = datetime.fromtimestamp(value)
         else:
-            date_object = parse(value)
+            date_object = parser.parse(value)
 
         date_string = str(datetime.strftime(date_object, format))
 
@@ -89,18 +91,14 @@ class Formatter:
             mapping = self._template.get(key, {})
 
             for map in get_mapping_list(mapping):
-                conversion = map.get('conversion', {})
-                if conversion.get('type') == 'geojson':
-                    if conversion.get('format') == 'longitude':
+                conversion = map.get("conversion", {})
+                if conversion.get("type") == "geojson":
+                    if conversion.get("format") == "longitude":
                         longitude = value
-                    elif conversion.get('format') == 'latitude':
+                    elif conversion.get("format") == "latitude":
                         latitude = value
 
-        geojson = {
-            "type": "Point",
-            "coordinates": [float(longitude),
-                            float(latitude)]
-        }
+        geojson = {"type": "Point", "coordinates": [float(longitude), float(latitude)]}
 
         return geojson
 
@@ -115,14 +113,14 @@ class Formatter:
         """
 
         result = {
-          'lowercase': lambda x: x.lower(),
-          'uppercase': lambda x: x.upper(),
-          'capitalize': lambda x: x.capitalize(),
-          'numeric': lambda x: self._to_numeric(x),
-          'datetime': lambda x: self._to_timestamp(x, format),
-          'prefix_value': lambda x: f"{format}{x}",
-          'hash': lambda x: sha256(x.encode('utf-8')).hexdigest(),
-          'no_conversion': lambda x: x
+            "lowercase": lambda x: x.lower(),
+            "uppercase": lambda x: x.upper(),
+            "capitalize": lambda x: x.capitalize(),
+            "numeric": lambda x: self._to_numeric(x),
+            "datetime": lambda x: self._to_timestamp(x, format),
+            "prefix_value": lambda x: f"{format}{x}",
+            "hash": lambda x: sha256(x.encode("utf-8")).hexdigest(),
+            "no_conversion": lambda x: x,
         }[type](value)
 
         return result
@@ -137,19 +135,27 @@ class Formatter:
         formatted = []
         for message in messages:
             msg = {}
-            for key, value in message.items():
-                mapping = self._template.get(key)
-                if mapping:
-                    for map in get_mapping_list(mapping):
-                        conversion = map.get('conversion', {})
-                        if conversion.get('type') == 'geojson':
-                            msg[map['name']] = self._geojson(message)
-                        else:
-                            msg[map['name']] = self._convert(
-                                value,
-                                conversion.get('type', 'no_conversion'),
-                                conversion.get('format'))
-            formatted.append(msg)
+
+            try:
+                for key, value in message.items():
+                    mapping = self._template.get(key)
+                    if mapping:
+                        for map in get_mapping_list(mapping):
+                            conversion = map.get("conversion", {})
+                            if conversion.get("type") == "geojson":
+                                msg[map["name"]] = self._geojson(message)
+                            else:
+                                msg[map["name"]] = self._convert(
+                                    value,
+                                    conversion.get("type", "no_conversion"),
+                                    conversion.get("format"),
+                                )
+            except parser.ParserError as e:
+                logging.info(f"Failed to format message: {str(e)} ({message})")
+                continue
+            else:
+                formatted.append(msg)
+
         return formatted
 
 
