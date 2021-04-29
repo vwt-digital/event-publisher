@@ -1,14 +1,15 @@
 import logging
-
-from gobits import Gobits
-
-from publisher import Publisher
 from formatter import Formatter
+
 from configuration import Configuration
 from datastore import GoogleCloudDatastore
+from gobits import Gobits
+from publisher import Publisher
 from storage import GoogleCloudStorage
 
 config = Configuration()
+
+logging.getLogger().setLevel(logging.INFO)
 
 
 def handler(data, context):
@@ -27,7 +28,7 @@ def handler(data, context):
         # Exit when file does not need to be processed
         if not file_name.startswith(config.prefix_filter):
             logging.info("Do not process file, exiting...")
-            return 'OK', 204
+            return "OK", 204
 
         file = GoogleCloudStorage().read(file_name, bucket_name)
         file.top_level_attribute = config.top_level_attribute
@@ -38,16 +39,15 @@ def handler(data, context):
         if not config.full_load:
             if config.state.type == "datastore":
                 records = GoogleCloudDatastore().difference(
-                    records,
-                    config.state.kind,
-                    config.state.property)
+                    records, config.state.kind, config.state.property
+                )
             else:
                 raise NotImplementedError("Unkown state type!")
 
         # Exit when no new records exist
         if not len(records):
             logging.info("No new records found, exiting...")
-            return 'OK', 204
+            return "OK", 204
 
         metadata = Gobits.from_context(context=context)
         publisher = Publisher(config.topic.batch_settings)
@@ -57,19 +57,19 @@ def handler(data, context):
             records,
             metadata.to_json(),
             config.topic.batch_size,
-            config.topic.subject)
+            config.topic.subject,
+        )
 
         # Store the new state records
         if not config.full_load:
             if config.state.type == "datastore":
                 logging.info("Adding new items to state")
                 GoogleCloudDatastore().put_multi(
-                    records,
-                    config.state.kind,
-                    config.state.property)
+                    records, config.state.kind, config.state.property
+                )
 
     except Exception as e:
         logging.exception(e)
-        return 'Bad Request', 400
+        return "Bad Request", 400
 
-    return 'OK', 204
+    return "OK", 204
