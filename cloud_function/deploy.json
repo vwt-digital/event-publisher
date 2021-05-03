@@ -1,0 +1,6 @@
+{
+  "entry-point":"handler",
+  "memory": "128MB",
+  "runtime": "python37",
+  "timeout": "480"
+}
