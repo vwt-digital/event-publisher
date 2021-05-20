@@ -4,7 +4,7 @@ This repository contains a Google Cloud function which can be readily deployed t
 
 ## Configuration
 
-See `config.yaml.example` for an example configuration file. This file contains the following configuration options:
+See [config.yaml.example](cloud_function/config.yaml.example) for an example configuration file. This file contains the following configuration options:
 
 | Variable             | Description                                       | Optional  |
 | -------------------- |-------------------------------------------------- | --------- |
@@ -17,10 +17,66 @@ See `config.yaml.example` for an example configuration file. This file contains 
 | topic.full_load      | Full or incremental load.                         | True      |
 | topic.top_level_attribute | Top level attribute when reading json files. | True      |
 | topic.prefix_filter  | Skip when file matches the prefix filter.         | True      |
-| state.type           | Indicates where the state is stored, currently only Datastore is supported              | False      |
-| state.kind           | Datastore kind name.                              | False     |
-| state.property       | Datastore property name.                          | False     |
+| state.type           | Indicates where the state is stored, currently only Datastore is supported              | True       |
+| state.kind           | Datastore kind name.                              | True      |
+| state.property       | Datastore property name.                          | True      |
 | format               | Maps records to a specific format, changing column names, converting values, etc. See `config.yaml.example` for specific cases. | True |
+
+### Configuration format
+The format field in the configuration can look as follows:
+~~~YAML
+format:
+  Column1:
+    name: first_name
+  Column2:
+    name: last_name
+    conversion:
+      type: lowercase
+  Column3:
+    subfields:
+      Subfield_Column4:
+        name: geometry
+        conversion:
+          type: geojson_point
+~~~
+Where the ```Column``` fields are the fields coming from the message and the ```name``` field is the field you want to have the value of the ```Column``` field published under.  
+
+The field ```conversion``` can be of type:
+- geojson_point
+- lowercase
+- datetime, which also needs a ```format``` field
+
+### Example format
+When you get for example the following message:
+~~~JSON
+{
+  "action": "add",
+  "employee": {
+    "first_and_last_name": "John Doe",
+    "age": 45
+  }
+}
+~~~
+
+The format in the config file could look as follows:
+~~~YAML
+  action:
+    name: to_do
+  employee:
+    subfields:
+      first_and_last_name:
+        name: full_name
+        conversion:
+          type: lowercase
+~~~
+
+Which will result in the following message being published:
+~~~JSON
+{
+  "to_do": "add",
+  "full_name": "john doe"
+}
+~~~
 
 ## Deployment
 

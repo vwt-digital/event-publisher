@@ -36,3 +36,7 @@ format:
     name: geometry
     conversion:
       type: geojson_point
+  Column5:
+    subfields:
+      work:
+        name: job
