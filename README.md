@@ -34,7 +34,7 @@ format:
       type: lowercase
   Column3:
     subfields:
-      Subfield_Column4:
+      Subfield_Column1:
         name: geometry
         conversion:
           type: geojson_point

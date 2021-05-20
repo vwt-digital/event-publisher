@@ -38,5 +38,5 @@ format:
       type: geojson_point
   Column5:
     subfields:
-      work:
+      Subfield_Column1:
         name: job
