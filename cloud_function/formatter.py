@@ -125,12 +125,18 @@ class Formatter:
 
         return result
 
-    def format(self, messages: list) -> list:
+    # flake8: noqa: C901
+    def format(self, messages: list, template=None) -> list:
         """
         Formats a message.
 
         :param message: A list of json messages.
         """
+        if isinstance(messages, dict):
+            messages = [messages]
+
+        if not template:
+            template = self._template
 
         formatted = []
         for message in messages:
@@ -138,11 +144,18 @@ class Formatter:
 
             try:
                 for key, value in message.items():
-                    mapping = self._template.get(key)
+                    mapping = template.get(key)
                     if mapping:
                         for map in get_mapping_list(mapping):
                             conversion = map.get("conversion", {})
-                            if conversion.get("type") == "geojson":
+                            subfields = map.get("subfields")
+                            if subfields:
+                                subfield_formatted = self.format(
+                                    messages=[value], template=subfields
+                                )
+                                for subfield_msg in subfield_formatted:
+                                    msg.update(subfield_msg)
+                            elif conversion.get("type") == "geojson":
                                 msg[map["name"]] = self._geojson(message)
                             else:
                                 msg[map["name"]] = self._convert(
