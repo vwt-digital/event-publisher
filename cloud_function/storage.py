@@ -1,13 +1,12 @@
 import json
+from io import BytesIO
+
 import brotli
 import pandas as pd
-
-from io import BytesIO
-from retry import retry
-from google.cloud import storage
 from defusedxml import ElementTree as ET
-
-from formatter import Formatter
+from event_formatter import Formatter
+from google.cloud import storage
+from retry import retry
 
 
 class File:
@@ -30,26 +29,26 @@ class File:
     @property
     def type(self):
         """Type of the file, based on the extension"""
-        return self.name.split('.')[-1]
+        return self.name.split(".")[-1]
 
     def _is_xml(self):
         """Indicates whether it is an xml file"""
-        if self.type == 'atom':
+        if self.type == "atom":
             return True
 
     def _is_xlsx(self):
         """Indicates whether it is an xlsx file"""
-        if self.type == 'xlsx':
+        if self.type == "xlsx":
             return True
 
     def _is_json(self):
         """Indicates whether it is a json file"""
-        if self.type == 'json':
+        if self.type == "json":
             return True
 
     def _is_csv(self):
         """Indicates whether it is a csv file"""
-        if self.type == 'csv':
+        if self.type == "csv":
             return True
 
     def to_json(self, formatter: Formatter):
@@ -63,10 +62,10 @@ class File:
         if self._is_xlsx():
             df = pd.read_excel(BytesIO(self.content), dtype=str)
             df[df.isnull()] = None
-            data = df.to_dict(orient='records')
+            data = df.to_dict(orient="records")
         elif self._is_csv():
             df = pd.read_csv(BytesIO(self.content), **self.csv_dialect_parameters)
-            data = df.to_dict(orient='records')
+            data = df.to_dict(orient="records")
         elif self._is_xml():
             data = self._xml_to_json(self.content)
         elif self._is_json():
@@ -89,17 +88,19 @@ class File:
 
         tree = ET.fromstring(xml)
         namespace = tree.tag[:-4]
-        contents = [entry.find(f'{namespace}content') for
-                    entry in tree.findall(f'{namespace}entry')]
+        contents = [
+            entry.find(f"{namespace}content")
+            for entry in tree.findall(f"{namespace}entry")
+        ]
 
         result = []
         for content in contents:
             items = {}
             for properties in content:
-                if properties.tag.endswith('}properties'):
+                if properties.tag.endswith("}properties"):
                     for prop in properties:
                         if prop.text:
-                            items[prop.tag.split('}')[-1]] = prop.text
+                            items[prop.tag.split("}")[-1]] = prop.text
                     result.append(items)
 
         return result
@@ -140,7 +141,7 @@ class GoogleCloudStorage:
         :content-encoding: The encoding of the file.
         """
 
-        if content_encoding == 'br':
+        if content_encoding == "br":
             return brotli.decompress(data)
 
         return data
