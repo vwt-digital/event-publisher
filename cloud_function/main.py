@@ -1,8 +1,8 @@
 import logging
-from formatter import Formatter
 
 from configuration import Configuration
 from datastore import GoogleCloudDatastore
+from event_formatter import Formatter
 from gobits import Gobits
 from publisher import Publisher
 from storage import GoogleCloudStorage
